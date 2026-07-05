@@ -1,4 +1,4 @@
-# YouTube Content Filter for Firefox
+# YouTube Keyword Filter for Firefox
 
 This Firefox extension hides desktop YouTube video and channel results whose
 visible text, title, or accessibility label contains any whole word entered by
