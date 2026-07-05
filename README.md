@@ -8,6 +8,9 @@ immediately restores cards hidden by the extension. Its state is retained while
 navigating within the same YouTube tab, but it is not saved between reloads.
 The extension does not collect or transmit user data.
 
+## Install the extension from the Add-ons Manager
+[https://addons.mozilla.org/en-US/firefox/addon/youtube-keyword-filter/](https://addons.mozilla.org/en-US/firefox/addon/youtube-keyword-filter/)
+
 ## Install temporarily in Firefox
 
 1. Open `about:debugging`.
