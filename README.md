@@ -1,7 +1,8 @@
 # YouTube Content Filter for Firefox
 
 This Firefox extension hides desktop YouTube video and channel results whose
-visible text, title, or accessibility label contains the whole word `ASMR`.
+visible text, title, or accessibility label contains any whole word entered by
+the user in the comma-separated keyword list. The default keyword is `ASMR`.
 
 The in-page switch starts **ON** after every full page load. Turning it off
 immediately restores cards hidden by the extension. Its state is retained while
