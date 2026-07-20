@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "YouTube Content Filter",
-  "version": "1.1.1",
-  "description": "Hides YouTube video cards containing the word ASMR.",
+  "version": "1.2.0",
+  "description": "Hides YouTube video cards based on customized keyword rules.",
   "icons": {
     "48": "icon-48.png",
     "96": "icon-96.png",

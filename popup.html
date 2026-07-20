@@ -7,11 +7,30 @@
 <body>
   <div class="container">
     <h2>Blocked Words</h2>
-    <p>Enter words or phrases to hide from YouTube, separated by commas:</p>
-    <textarea id="blacklist-input" rows="4" placeholder="e.g. ASMR, Minecraft, tutorial"></textarea>
-    <div class="actions">
-      <span id="status-message"></span>
-      <button id="save-btn">Save</button>
+    <p>Add words and select how they should be matched:</p>
+    
+    <div class="add-rule-form">
+      <input type="hidden" id="edit-id" value="">
+      <div class="form-row">
+        <input type="text" id="word-input" placeholder="Enter keyword to block...">
+      </div>
+      <div class="form-row">
+        <select id="type-select">
+          <option value="contains">Contains</option>
+          <option value="exact">Exact Word</option>
+          <option value="starts">Starts With</option>
+          <option value="ends">Ends With</option>
+          <option value="regex">Regex</option>
+        </select>
+        <button id="add-btn">Add</button>
+        <button id="cancel-btn" class="hidden">Cancel</button>
+      </div>
+    </div>
+    
+    <div id="status-message"></div>
+    
+    <div class="rule-list-container">
+      <ul id="rule-list"></ul>
     </div>
   </div>
   <script src="popup.js"></script>

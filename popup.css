@@ -3,7 +3,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #282828;
   color: #fff;
-  width: 300px;
+  width: 320px;
 }
 
 .container {
@@ -22,8 +22,24 @@ p {
   color: #aaa;
 }
 
-textarea {
-  width: 100%;
+.add-rule-form {
+  background: #1e1e1e;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+input[type="text"], select {
   box-sizing: border-box;
   background-color: #121212;
   color: #fff;
@@ -32,43 +48,137 @@ textarea {
   padding: 8px;
   font-family: inherit;
   font-size: 13px;
-  resize: vertical;
+  flex: 1;
 }
 
-textarea:focus {
+input[type="text"]:focus, select:focus {
   outline: none;
   border-color: #3ea6ff;
-}
-
-.actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 12px;
-}
-
-#status-message {
-  font-size: 12px;
-  color: #2ba640;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-#status-message.visible {
-  opacity: 1;
 }
 
 button {
   background-color: #3ea6ff;
   color: #0f0f0f;
   border: none;
-  border-radius: 18px;
-  padding: 6px 16px;
-  font-size: 14px;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
 }
 
 button:hover {
   background-color: #65b8ff;
+}
+
+#cancel-btn {
+  background-color: #444;
+  color: #fff;
+}
+
+#cancel-btn:hover {
+  background-color: #555;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#status-message {
+  font-size: 12px;
+  color: #2ba640;
+  margin-bottom: 8px;
+  min-height: 14px;
+}
+
+.rule-list-container {
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #333;
+  padding-top: 12px;
+}
+
+ul#rule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a1a;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid #333;
+}
+
+.rule-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.rule-word {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rule-type {
+  font-size: 11px;
+  color: #aaa;
+  background: #333;
+  padding: 2px 6px;
+  border-radius: 10px;
+  align-self: flex-start;
+}
+
+.rule-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.rule-actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.edit-btn {
+  background-color: #444;
+  color: #fff;
+}
+
+.edit-btn:hover {
+  background-color: #555;
+}
+
+.delete-btn {
+  background-color: #cc0000;
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background-color: #ff3333;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
 }

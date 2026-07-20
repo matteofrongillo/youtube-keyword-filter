@@ -1,35 +1,62 @@
 (() => {
   "use strict";
 
-  if (globalThis.__youtubeAsmrFilterLoaded) {
+  if (globalThis.__youtubekeywordFilterLoaded) {
     return;
   }
-  globalThis.__youtubeAsmrFilterLoaded = true;
+  globalThis.__youtubekeywordFilterLoaded = true;
 
-  let blockedRegex = null;
+  let filterRules = [];
+  let matchFunctions = [];
 
-  function updateBlockedRegex(wordsString) {
-    if (!wordsString || wordsString.trim() === "") {
-      blockedRegex = null;
-      return;
-    }
-    // Split by commas, trim whitespace, and filter out empty strings
-    const words = wordsString.split(',').map(w => w.trim()).filter(w => w.length > 0);
-    if (words.length === 0) {
-      blockedRegex = null;
-      return;
-    }
-    // Escape characters that have special meaning in regex
-    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = words.map(w => '\\b' + escapeRegExp(w) + '\\b').join('|');
-    blockedRegex = new RegExp(pattern, 'i');
+  const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  function updateFilterRules(rules) {
+    filterRules = rules || [];
+    matchFunctions = [];
+
+    filterRules.forEach(rule => {
+      const word = rule.word;
+      if (!word) return;
+
+      try {
+        let regex;
+        switch (rule.type) {
+          case "contains":
+            regex = new RegExp(escapeRegExp(word), 'i');
+            break;
+          case "exact":
+            regex = new RegExp('\\b' + escapeRegExp(word) + '\\b', 'i');
+            break;
+          case "starts":
+            regex = new RegExp('^\\s*' + escapeRegExp(word), 'i');
+            break;
+          case "ends":
+            regex = new RegExp(escapeRegExp(word) + '\\s*$', 'i');
+            break;
+          case "regex":
+            regex = new RegExp(word, 'i');
+            break;
+          default:
+            regex = new RegExp(escapeRegExp(word), 'i');
+        }
+        matchFunctions.push((text) => regex.test(text));
+      } catch (e) {
+        console.error("Invalid regex in filter rule:", rule, e);
+      }
+    });
   }
-  const switchId = "youtube-asmr-filter-switch";
+
+  function matchesAnyRule(text) {
+    if (matchFunctions.length === 0) return false;
+    return matchFunctions.some(fn => fn(text));
+  }
+  const switchId = "youtube-keyword-filter-switch";
   const hiddenClass = "youtube-content-filter-hidden";
   const hiddenAttribute = "data-youtube-content-filter-hidden";
   const enabledAttribute = "data-youtube-content-filter-enabled";
-  const legacyHiddenClass = "youtube-asmr-filter-hidden";
-  const legacyHiddenAttribute = "data-youtube-asmr-filter-hidden";
+  const legacyHiddenClass = "youtube-keyword-filter-hidden";
+  const legacyHiddenAttribute = "data-youtube-keyword-filter-hidden";
 
   const resultSelector = [
     "ytd-compact-video-renderer",
@@ -65,15 +92,25 @@
   }
 
   function hideCard(card) {
-    card.classList.add(hiddenClass);
-    card.setAttribute(hiddenAttribute, "");
+    let target = card;
+    const wrapper = card.closest("ytd-rich-item-renderer, ytd-grid-video-renderer");
+    if (wrapper) {
+      target = wrapper;
+    }
+    target.classList.add(hiddenClass);
+    target.setAttribute(hiddenAttribute, "");
   }
 
   function restoreCard(card) {
-    card.classList.remove(hiddenClass);
-    card.classList.remove(legacyHiddenClass);
-    card.removeAttribute(hiddenAttribute);
-    card.removeAttribute(legacyHiddenAttribute);
+    let target = card;
+    const wrapper = card.closest("ytd-rich-item-renderer, ytd-grid-video-renderer");
+    if (wrapper) {
+      target = wrapper;
+    }
+    target.classList.remove(hiddenClass);
+    target.classList.remove(legacyHiddenClass);
+    target.removeAttribute(hiddenAttribute);
+    target.removeAttribute(legacyHiddenAttribute);
   }
 
   function restoreAllCards() {
@@ -95,7 +132,7 @@
     }
 
     document.querySelectorAll(resultSelector).forEach((card) => {
-      if (blockedRegex && blockedRegex.test(getText(card))) {
+      if (matchesAnyRule(getText(card))) {
         hideCard(card);
       } else if (card.hasAttribute(hiddenAttribute)) {
         // YouTube can reuse a card element for a different video.
@@ -103,11 +140,11 @@
       }
     });
 
-    if (blockedRegex) {
+    if (matchFunctions.length > 0) {
       document
         .querySelectorAll("a[href*='/watch'], h3, #video-title")
         .forEach((element) => {
-          if (!blockedRegex.test(getText(element))) {
+          if (!matchesAnyRule(getText(element))) {
             return;
           }
 
@@ -121,9 +158,9 @@
 
   function updateSwitch(button) {
     button.setAttribute("aria-checked", String(enabled));
-    button.classList.toggle("youtube-asmr-filter-switch-on", enabled);
+    button.classList.toggle("youtube-keyword-filter-switch-on", enabled);
 
-    const state = button.querySelector(".youtube-asmr-filter-state");
+    const state = button.querySelector(".youtube-keyword-filter-state");
     if (state) {
       state.textContent = enabled ? "ON" : "OFF";
     }
@@ -155,22 +192,26 @@
     button.setAttribute("aria-label", "Toggle the YouTube content filter");
 
     const label = document.createElement("span");
-    label.className = "youtube-asmr-filter-label";
+    label.className = "youtube-keyword-filter-label";
     label.textContent = "Filter";
 
     const track = document.createElement("span");
-    track.className = "youtube-asmr-filter-track";
+    track.className = "youtube-keyword-filter-track";
     track.setAttribute("aria-hidden", "true");
 
     const thumb = document.createElement("span");
-    thumb.className = "youtube-asmr-filter-thumb";
+    thumb.className = "youtube-keyword-filter-thumb";
     track.append(thumb);
 
     const state = document.createElement("span");
-    state.className = "youtube-asmr-filter-state";
+    state.className = "youtube-keyword-filter-state";
 
     button.append(label, track, state);
-    button.addEventListener("click", () => setEnabled(!enabled));
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setEnabled(!enabled);
+    });
     updateSwitch(button);
 
     return button;
@@ -259,16 +300,24 @@
   }
 
   function initFilter() {
-    chrome.storage.local.get({ blockedWords: "ASMR" }, (result) => {
-      updateBlockedRegex(result.blockedWords);
+    chrome.storage.local.get(["filterRules", "blockedWords"], (result) => {
+      if (result.filterRules) {
+        updateFilterRules(result.filterRules);
+      } else if (result.blockedWords) {
+        // Migrate old blockedWords
+        const words = result.blockedWords.split(',').map(w => w.trim()).filter(w => w.length > 0);
+        const migratedRules = words.map((w, i) => ({ id: "migrated_" + i, word: w, type: "exact" }));
+        updateFilterRules(migratedRules);
+        chrome.storage.local.set({ filterRules: migratedRules, blockedWords: "" });
+      }
       start();
     });
   }
 
   // Listen for changes from the popup
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.blockedWords) {
-      updateBlockedRegex(changes.blockedWords.newValue);
+    if (area === "local" && changes.filterRules) {
+      updateFilterRules(changes.filterRules.newValue);
       restoreAllCards(); 
       removeBlockedResults();
     }
