@@ -11,12 +11,17 @@
 
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+  // YouTube titles can use compatibility Unicode characters such as
+  // mathematical script letters (for example, "𝒜𝒞𝑀𝒫"). NFKC maps those
+  // characters to their plain-text equivalents before matching.
+  const normalizeForMatching = (value) => String(value ?? "").normalize("NFKC");
+
   function updateFilterRules(rules) {
     filterRules = rules || [];
     matchFunctions = [];
 
     filterRules.forEach(rule => {
-      const word = rule.word;
+      const word = normalizeForMatching(rule.word);
       if (!word) return;
 
       try {
@@ -49,7 +54,8 @@
 
   function matchesAnyRule(text) {
     if (matchFunctions.length === 0) return false;
-    return matchFunctions.some(fn => fn(text));
+    const normalizedText = normalizeForMatching(text);
+    return matchFunctions.some(fn => fn(normalizedText));
   }
   const switchId = "youtube-keyword-filter-switch";
   const hiddenClass = "youtube-content-filter-hidden";
@@ -64,9 +70,21 @@
     "ytd-rich-item-renderer",
     "ytd-grid-video-renderer",
     "ytd-reel-item-renderer",
+    "ytd-reel-video-renderer",
+    "ytd-rich-grid-media",
+    "ytd-rich-grid-slim-media",
     "ytd-playlist-panel-video-renderer",
     "ytd-channel-renderer",
     "yt-lockup-view-model"
+  ].join(",");
+
+  const titleSelector = [
+    "a[href*='/watch']",
+    "a[href*='/shorts/']",
+    "a#video-title-link",
+    "#video-title",
+    "h3 a",
+    "yt-formatted-string#video-title"
   ].join(",");
 
   let enabled = true;
@@ -91,22 +109,18 @@
     ].join(" ");
   }
 
+  function getCardTarget(card) {
+    return card.closest("ytd-rich-item-renderer, ytd-grid-video-renderer") || card;
+  }
+
   function hideCard(card) {
-    let target = card;
-    const wrapper = card.closest("ytd-rich-item-renderer, ytd-grid-video-renderer");
-    if (wrapper) {
-      target = wrapper;
-    }
+    const target = getCardTarget(card);
     target.classList.add(hiddenClass);
     target.setAttribute(hiddenAttribute, "");
   }
 
   function restoreCard(card) {
-    let target = card;
-    const wrapper = card.closest("ytd-rich-item-renderer, ytd-grid-video-renderer");
-    if (wrapper) {
-      target = wrapper;
-    }
+    const target = getCardTarget(card);
     target.classList.remove(hiddenClass);
     target.classList.remove(legacyHiddenClass);
     target.removeAttribute(hiddenAttribute);
@@ -131,18 +145,21 @@
       return;
     }
 
+    const allTargets = new Set();
+    const matchingTargets = new Set();
+
     document.querySelectorAll(resultSelector).forEach((card) => {
+      const target = getCardTarget(card);
+      allTargets.add(target);
+
       if (matchesAnyRule(getText(card))) {
-        hideCard(card);
-      } else if (card.hasAttribute(hiddenAttribute)) {
-        // YouTube can reuse a card element for a different video.
-        restoreCard(card);
+        matchingTargets.add(target);
       }
     });
 
     if (matchFunctions.length > 0) {
       document
-        .querySelectorAll("a[href*='/watch'], h3, #video-title")
+        .querySelectorAll(titleSelector)
         .forEach((element) => {
           if (!matchesAnyRule(getText(element))) {
             return;
@@ -150,10 +167,21 @@
 
           const card = element.closest(resultSelector);
           if (card) {
-            hideCard(card);
+            const target = getCardTarget(card);
+            allTargets.add(target);
+            matchingTargets.add(target);
           }
         });
     }
+
+    allTargets.forEach((target) => {
+      if (matchingTargets.has(target)) {
+        hideCard(target);
+      } else if (target.hasAttribute(hiddenAttribute)) {
+        // YouTube can reuse a card element for a different video.
+        restoreCard(target);
+      }
+    });
   }
 
   function updateSwitch(button) {
